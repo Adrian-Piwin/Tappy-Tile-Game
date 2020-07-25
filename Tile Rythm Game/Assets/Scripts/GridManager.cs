@@ -10,12 +10,22 @@ public class GridManager : MonoBehaviour
     private int cols = 5;
     [SerializeField]
     private float tileSize = 1;
+    [SerializeField]
+    private Sprite[] sprites = new Sprite[4];
+    [SerializeField]
+    private bool gamePlaying = false;
 
     private GameObject[,] gridArray;
+    // 0 = grey tile, 1 = green tile
+    private int[,] gameArray;
+    private int rowCoord, colCoord;
     private List<GameObject> queuedTileOrder = new List<GameObject>();
     private GameObject currentClickedTile;
 
     public bool tileClicked = false;
+    static float spawnInterval = 1.0f;
+    private float tileUptime = 3.0f;
+    private int score = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -27,18 +37,26 @@ public class GridManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Do something if a tile is clicked
         if (tileClicked)
         {
-            if (currentClickedTile == queuedTileOrder[0]){
-                Debug.Log("Yes");
-            }else{
-                Debug.Log("No");
+            // Check if tile matches the current queued tile 
+            if (queuedTileOrder.Count != 0){
+                if (currentClickedTile == queuedTileOrder[0]){
+                    Debug.Log("Yes");
+                    queuedTileOrder.RemoveAt(0);
+                }else{
+                    Debug.Log("No");
+                }
             }
-
+            
             tileClicked = false;
         }
+
+        
     }
 
+    // Generate grid of tiles, using tile reference in resources
     private void GenerateGrid()
     {
         GameObject referenceTile = (GameObject)Instantiate(Resources.Load("tile-0"));
@@ -68,11 +86,53 @@ public class GridManager : MonoBehaviour
         transform.position = new Vector2(-gridW / 2 + tileSize / 2, gridH / 2 - tileSize / 2);
     }
 
+    // Start game
     private void StartGame()
     {
-        queuedTileOrder.Add(gridArray[2,3]);
+        //queuedTileOrder.Add(gridArray[0,1]);
+        //changeTileSprite(gridArray[0,1], 1);
+        gamePlaying = true;
+        gameArray = new int[rows, cols];
+        StartCoroutine(spawnTile());
     }
 
+    IEnumerator spawnTile(){
+        while (gamePlaying)
+        {
+            yield return new WaitForSeconds(spawnInterval);
+            getSpawnCoords(out rowCoord, out colCoord);
+            changeTileSprite(gridArray[rowCoord,colCoord], 1);
+            Debug.Log("spawned");
+        }
+    }
+
+    IEnumerator finishedTileUptime()
+    {
+        yield return new WaitForSeconds(tileUptime);
+        Debug.Log("");
+    }
+
+    private void getSpawnCoords(out int x, out int y)
+    {
+        while (true)
+        {
+            x = Random.Range(0,rows);
+            y = Random.Range(0,cols);
+
+            if (gameArray[x, y] == 0){
+                gameArray[x, y] = 1;
+                break;
+            }
+        }
+    }
+
+    // Change a tile's sprite
+    private void changeTileSprite(GameObject obj, int chosen)
+    {
+        obj.GetComponent<SpriteRenderer>().sprite = sprites[chosen];
+    }
+
+    // Get tile that was clicked
     public void updateTileClicked(GameObject tile)
     {
         tileClicked = true;
