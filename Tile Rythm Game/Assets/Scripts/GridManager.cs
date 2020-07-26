@@ -32,6 +32,7 @@ public class GridManager : MonoBehaviour
     private int score = 0;
     private int tileNum;
     private int tileNumMax = 5;
+    private string[] coords;
 
     IEnumerator tileSpawnTimer;
 
@@ -54,6 +55,11 @@ public class GridManager : MonoBehaviour
                     queuedTileOrder.RemoveAt(0);
                     StopCoroutine(queuedTileTimer[0]);
                     queuedTileTimer.RemoveAt(0);
+                    
+                    // Update game array
+                    coords = (currentClickedTile.name).Split(',');
+                    Debug.Log(coords[0] + " " + coords[1]);
+                    gameArray[int.Parse(coords[0]), int.Parse(coords[1])] = 0;
 
                     changeTileSprite(currentClickedTile, 0);
                     currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
@@ -124,7 +130,7 @@ public class GridManager : MonoBehaviour
             getSpawnCoords(out rowCoord, out colCoord);
             changeTileSprite(gridArray[rowCoord,colCoord], 1);
             tileNum += 1;
-            if (tileNum >= queuedTileOrder.Count+2){
+            if (tileNum >= tileNumMax){
                 tileNum = 1;
             }
             gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);

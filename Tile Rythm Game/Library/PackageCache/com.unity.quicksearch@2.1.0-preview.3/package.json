@@ -1,0 +1,65 @@
+{
+  "name": "com.unity.quicksearch",
+  "displayName": "Quick Search",
+  "version": "2.1.0-preview.3",
+  "unity": "2019.4",
+  "description": "Search multiple areas of Unity: assets, scene objects, menu items, packages, APIs, settings, etc.\n\nOn Windows simply press Alt+' to find anything or Option+' on Mac.\nLook in the shortcut manager for additional Quick Search shortcut bindings.",
+  "type": "tool",
+  "keywords": [
+    "unity",
+    "editor",
+    "omni",
+    "tool",
+    "quick",
+    "search",
+    "assets",
+    "menu",
+    "scene",
+    "api",
+    "packages",
+    "anything"
+  ],
+  "relatedPackages": {
+    "com.unity.quicksearch.tests": "2.1.0-preview.3"
+  },
+  "upmCi": {
+    "footprint": "d2469b242c706ecdea67d845377272d92eab7400"
+  },
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/com.unity.quicksearch.git",
+    "type": "git",
+    "revision": "f7a5448e21f2de56266d342777e83e7d416c26d4"
+  },
+  "samples": [
+    {
+      "displayName": "Customized Scene Provider",
+      "description": "Scene Provider Customization Example",
+      "path": "Samples~/CustomizedSceneProvider"
+    },
+    {
+      "displayName": "Dependency Search Provider",
+      "description": "Index project dependencies",
+      "path": "Samples~/DependencyProvider"
+    },
+    {
+      "displayName": "QueryEngine Basic",
+      "description": "Basic usage of the Query Engine, which should cover most needs.",
+      "path": "Samples~/QueryEngineBasic"
+    },
+    {
+      "displayName": "QueryEngine Custom Operators",
+      "description": "Customisation of the Query Engine for your specific needs.",
+      "path": "Samples~/QueryEngineCustomOperators"
+    },
+    {
+      "displayName": "Spatial Provider",
+      "description": "Spatial Provider example using the QueryEngine.",
+      "path": "Samples~/SpatialProvider"
+    },
+    {
+      "displayName": "Type Search Provider",
+      "description": "Search unity obeject types",
+      "path": "Samples~/TypeProvider"
+    }
+  ]
+}
