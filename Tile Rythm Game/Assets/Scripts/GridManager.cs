@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class GridManager : MonoBehaviour
     private int cols = 5;
     [SerializeField]
     private float tileSize = 1;
+    [SerializeField]
+    private Text scoreText;
     [SerializeField]
     private Sprite[] sprites = new Sprite[4];
     [SerializeField]
@@ -52,7 +55,9 @@ public class GridManager : MonoBehaviour
 
                     changeTileSprite(currentClickedTile, 0);
                     score += 1;
+                    updateScoreText();
                 }else{
+                    changeTileSprite(currentClickedTile, 3);
                     gameLost();
                 }
             }
@@ -102,6 +107,7 @@ public class GridManager : MonoBehaviour
         queuedTileOrder.Clear();
         queuedTileTimer.Clear();
         score = 0;
+        updateScoreText();
         gameArray = new int[rows, cols];
         tileSpawnTimer = spawnTile();
         StartCoroutine(tileSpawnTimer);
@@ -136,8 +142,6 @@ public class GridManager : MonoBehaviour
         foreach (IEnumerator tileTimer in queuedTileTimer){
             StopCoroutine(tileTimer);
         }
-
-        Debug.Log("Score: " + score);
     }
 
     private void getSpawnCoords(out int x, out int y)
@@ -177,10 +181,15 @@ public class GridManager : MonoBehaviour
         StartGame();
     }
 
+    private void updateScoreText(){
+        scoreText.text = ("Score: " + score);
+    }
+
     // Get tile that was clicked
     public void updateTileClicked(GameObject tile)
     {
         tileClicked = true;
         currentClickedTile = tile;
     }
+    
 }
