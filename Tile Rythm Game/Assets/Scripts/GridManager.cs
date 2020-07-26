@@ -30,6 +30,8 @@ public class GridManager : MonoBehaviour
     static float spawnInterval = 1.0f;
     private float tileUptime = 3.0f;
     private int score = 0;
+    private int tileNum;
+    private int tileNumMax = 5;
 
     IEnumerator tileSpawnTimer;
 
@@ -44,7 +46,7 @@ public class GridManager : MonoBehaviour
     void Update()
     {
         // Do something if a tile is clicked
-        if (tileClicked)
+        if (tileClicked && gamePlaying)
         {
             // Check if tile matches the current queued tile 
             if (queuedTileOrder.Count != 0){
@@ -54,6 +56,7 @@ public class GridManager : MonoBehaviour
                     queuedTileTimer.RemoveAt(0);
 
                     changeTileSprite(currentClickedTile, 0);
+                    currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
                     score += 1;
                     updateScoreText();
                 }else{
@@ -106,6 +109,7 @@ public class GridManager : MonoBehaviour
         gamePlaying = true;
         queuedTileOrder.Clear();
         queuedTileTimer.Clear();
+        tileNum = 0;
         score = 0;
         updateScoreText();
         gameArray = new int[rows, cols];
@@ -119,6 +123,11 @@ public class GridManager : MonoBehaviour
             yield return new WaitForSeconds(spawnInterval);
             getSpawnCoords(out rowCoord, out colCoord);
             changeTileSprite(gridArray[rowCoord,colCoord], 1);
+            tileNum += 1;
+            if (tileNum >= queuedTileOrder.Count+2){
+                tileNum = 1;
+            }
+            gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
             IEnumerator tileTimer = tileUptimeFinished(gridArray[rowCoord,colCoord]);
             StartCoroutine(tileTimer);
@@ -137,6 +146,7 @@ public class GridManager : MonoBehaviour
 
     private void gameLost()
     {
+        gamePlaying = false;
         StopCoroutine(tileSpawnTimer);
 
         foreach (IEnumerator tileTimer in queuedTileTimer){
@@ -166,7 +176,6 @@ public class GridManager : MonoBehaviour
 
     // Reset game
     public void resetGame(){
-        gamePlaying = false;
         StopCoroutine(tileSpawnTimer);
 
         // Reset tiles
@@ -176,6 +185,12 @@ public class GridManager : MonoBehaviour
             {   
                 changeTileSprite(gridArray[row,col], 0);
             }
+        }
+
+        // Reset text on tiles
+        foreach(GameObject tile in queuedTileOrder)
+        {
+            tile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
         }
 
         StartGame();

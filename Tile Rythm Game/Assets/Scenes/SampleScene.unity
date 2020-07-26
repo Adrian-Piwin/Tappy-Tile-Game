@@ -203,7 +203,7 @@ GameObject:
   - component: {fileID: 65419864}
   - component: {fileID: 65419867}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Reset Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -421,7 +421,7 @@ GameObject:
   - component: {fileID: 774433441}
   - component: {fileID: 774433440}
   m_Layer: 5
-  m_Name: Text
+  m_Name: Score Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -518,6 +518,7 @@ MonoBehaviour:
   rows: 5
   cols: 5
   tileSize: 1.05
+  scoreText: {fileID: 774433440}
   sprites:
   - {fileID: 21300000, guid: 30e62f11d7b2a480d84d1bb217caec92, type: 3}
   - {fileID: 21300000, guid: f74a64e8bdc8d4ae8bc85f4d2390107c, type: 3}
