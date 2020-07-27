@@ -27,7 +27,8 @@ public class GridManager : MonoBehaviour
     private GameObject currentClickedTile;
 
     public bool tileClicked = false;
-    static float spawnInterval = 1.0f;
+    private bool firstTileClicked;
+    static float spawnInterval = 0.5f;
     private float tileUptime = 3.0f;
     private int score = 0;
     private int tileNum;
@@ -35,6 +36,7 @@ public class GridManager : MonoBehaviour
     private string[] coords;
 
     IEnumerator tileSpawnTimer;
+    IEnumerator tileTimer;
 
     // Start is called before the first frame update
     void Start()
@@ -53,18 +55,28 @@ public class GridManager : MonoBehaviour
             if (queuedTileOrder.Count != 0){
                 if (currentClickedTile == queuedTileOrder[0]){
                     queuedTileOrder.RemoveAt(0);
-                    StopCoroutine(queuedTileTimer[0]);
-                    queuedTileTimer.RemoveAt(0);
                     
                     // Update game array
                     coords = (currentClickedTile.name).Split(',');
-                    Debug.Log(coords[0] + " " + coords[1]);
                     gameArray[int.Parse(coords[0]), int.Parse(coords[1])] = 0;
 
                     changeTileSprite(currentClickedTile, 0);
                     currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
                     score += 1;
                     updateScoreText();
+                    
+                    // Start spawning tiles once the first tile is clicked
+                    if (firstTileClicked)
+                    {
+                        StartCoroutine(tileSpawnTimer);
+                        firstTileClicked = false;
+
+                    }else{
+                        // Avoid deleting non existent timer for first tile
+                        StopCoroutine(queuedTileTimer[0]);
+                        queuedTileTimer.RemoveAt(0);
+                    }
+
                 }else{
                     changeTileSprite(currentClickedTile, 3);
                     gameLost();
@@ -73,7 +85,6 @@ public class GridManager : MonoBehaviour
             
             tileClicked = false;
         }
-
         
     }
 
@@ -119,14 +130,17 @@ public class GridManager : MonoBehaviour
         score = 0;
         updateScoreText();
         gameArray = new int[rows, cols];
-        tileSpawnTimer = spawnTile();
-        StartCoroutine(tileSpawnTimer);
+
+        tileSpawnTimer = spawnTile(spawnInterval);
+        firstTileClicked = true;
+        spawnFirstTile();
     }
 
-    IEnumerator spawnTile(){
+    // Spawn a tiles using the same constant interval
+    IEnumerator spawnTile(float spwnInterval){
         while (true)
         {
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSeconds(spwnInterval);
             getSpawnCoords(out rowCoord, out colCoord);
             changeTileSprite(gridArray[rowCoord,colCoord], 1);
             tileNum += 1;
@@ -135,13 +149,27 @@ public class GridManager : MonoBehaviour
             }
             gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
-            IEnumerator tileTimer = tileUptimeFinished(gridArray[rowCoord,colCoord]);
+            tileTimer = tileUptimeFinished(gridArray[rowCoord,colCoord]);
             StartCoroutine(tileTimer);
             queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
             queuedTileTimer.Add(tileTimer);
         }
     }
 
+    // Spawn the first tile without a time out timer
+    private void spawnFirstTile(){
+        getSpawnCoords(out rowCoord, out colCoord);
+        changeTileSprite(gridArray[rowCoord,colCoord], 1);
+        tileNum += 1;
+        if (tileNum >= tileNumMax){
+            tileNum = 1;
+        }
+        gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
+
+        queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
+    }
+
+    // Timer for each tile, lose game if timer ends
     IEnumerator tileUptimeFinished(GameObject tile)
     {
         yield return new WaitForSeconds(tileUptime);
@@ -150,6 +178,7 @@ public class GridManager : MonoBehaviour
         gameLost();
     }
 
+    // Loser handler
     private void gameLost()
     {
         gamePlaying = false;
@@ -160,6 +189,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // Out a random available row and column
     private void getSpawnCoords(out int x, out int y)
     {
         while (true)
@@ -202,6 +232,7 @@ public class GridManager : MonoBehaviour
         StartGame();
     }
 
+    // Update score text on screen
     private void updateScoreText(){
         scoreText.text = ("Score: " + score);
     }
