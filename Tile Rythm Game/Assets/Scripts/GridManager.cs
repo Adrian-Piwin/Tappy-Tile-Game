@@ -188,15 +188,11 @@ public class GridManager : MonoBehaviour
                     tempCol = colCoord+(colAdd*ind);
 
                     // Check if out of range, or if spot already occupied
-                    if (tempRow < 0 || tempRow >= rows || tempCol < 0 || tempCol >= cols)
-                    {
-                        break;
-                    }else if (gameArray[tempRow, tempCol] == 1)
+                    if (tempRow < 0 || tempRow >= rows || tempCol < 0 || tempCol >= cols || gameArray[tempRow, tempCol] == 1)
                     {
                         break;
                     }
                     
-
                     // If spot is available, add direction to list
                     if (ind == tileSlideSize-1)
                     {
@@ -239,17 +235,23 @@ public class GridManager : MonoBehaviour
     // Creation of adding a tile to the grid
     private void setupNewTile(int row, int col)
     {
+        // Update sprite
         changeTileSprite(gridArray[row,col], 1);
+        // Update game array
+        gameArray[row, col] = 1;
+
+        // Get number for the tile and update the tile
         tileNum += 1;
         if (tileNum >= tileNumMax){
             tileNum = 1;
         }
         gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
+        // Set up timers & append to queues
         tileTimer = tileUptimeFinished(gridArray[row,col]);
         StartCoroutine(tileTimer);
-        queuedTileOrder.Add(gridArray[row,col]);
         queuedTileTimer.Add(tileTimer);
+        queuedTileOrder.Add(gridArray[row,col]);
     }
 
     // Timer for each tile, lose game if timer ends
@@ -286,7 +288,6 @@ public class GridManager : MonoBehaviour
             y = Random.Range(0,cols);
 
             if (gameArray[x, y] == 0){
-                gameArray[x, y] = 1;
                 break;
             }
         }
