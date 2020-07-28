@@ -63,7 +63,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\AudioProcessor.cs" />
     <Compile Include="Assets\Scripts\GridManager.cs" />
+    <Compile Include="Assets\Scripts\MusicManager.cs" />
     <Compile Include="Assets\Scripts\PushSortingLayer.cs" />
     <Compile Include="Assets\Scripts\ResetButtonHandler.cs" />
     <Compile Include="Assets\Scripts\TileScript.cs" />

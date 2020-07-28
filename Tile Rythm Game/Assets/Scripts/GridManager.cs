@@ -28,11 +28,12 @@ public class GridManager : MonoBehaviour
 
     public bool tileClicked = false;
     private bool firstTileClicked;
-    static float spawnInterval = 0.5f;
+    static float spawnInterval = 2.0f;
     private float tileUptime = 3.0f;
     private int score = 0;
     private int tileNum;
-    private int tileNumMax = 5;
+    private int tileNumMax = 9;
+    private int slideTileProbability = 3;
     private string[] coords;
 
     IEnumerator tileSpawnTimer;
@@ -78,8 +79,11 @@ public class GridManager : MonoBehaviour
                     }
 
                 }else{
-                    changeTileSprite(currentClickedTile, 3);
-                    gameLost();
+                    if(!firstTileClicked)
+                    {
+                        changeTileSprite(currentClickedTile, 3);
+                        gameLost();
+                    }
                 }
             }
             
@@ -141,19 +145,68 @@ public class GridManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(spwnInterval);
-            getSpawnCoords(out rowCoord, out colCoord);
-            changeTileSprite(gridArray[rowCoord,colCoord], 1);
-            tileNum += 1;
-            if (tileNum >= tileNumMax){
-                tileNum = 1;
-            }
-            gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
-            tileTimer = tileUptimeFinished(gridArray[rowCoord,colCoord]);
-            StartCoroutine(tileTimer);
-            queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
-            queuedTileTimer.Add(tileTimer);
+            if(Random.Range(0,10) > slideTileProbability){
+                getSpawnCoords(out rowCoord, out colCoord);
+                setupNewTile(rowCoord, colCoord, 1);
+            }else{
+                spawnTileSlider(Random.Range(2,4));
+            }
+            
         }
+    }
+
+    // Spawn a tiles using the same constant interval
+    private void spawnTileSlider(int tileSlideSize){
+        // 2d array to hold coords that the tiles for the slider will spawn with
+        List<int> directionList = new List<int>();
+        int rowAdd, colAdd, tempRow, tempCol;
+
+        while (true)
+        {
+            getSpawnCoords(out rowCoord, out colCoord);
+            
+            for(int i = 0; i < 4; i++)
+            {
+                getDirectionModifiers(i, out rowAdd, out colAdd);
+
+                // Check if spots avaiable in all directions
+                for (int ind = 1; ind < tileSlideSize; ind++)
+                {
+                    tempRow = rowCoord+(rowAdd*ind);
+                    tempCol = colCoord+(colAdd*ind);
+
+                    // Check if out of range, or if spot already occupied
+                    if (tempRow < 0 || tempRow >= rows || tempCol < 0 || tempCol >= cols)
+                    {
+                        break;
+                    }else if (gameArray[tempRow, tempCol] == 1)
+                    {
+                        break;
+                    }
+                    
+
+                    // If spot is available, add direction to list
+                    if (ind == tileSlideSize-1)
+                    {
+                        directionList.Add(i);
+                    }
+                }
+            }
+
+            // Continue if at least 1 direction is available
+            if (directionList.Count > 0){
+                break;
+            }
+
+        }
+        
+        getDirectionModifiers(directionList[Random.Range(0,directionList.Count)], out rowAdd, out colAdd);
+
+        for (int i = 0; i < tileSlideSize; i++){
+            setupNewTile(rowCoord+(rowAdd*i), colCoord+(colAdd*i), 1);
+        }
+        
     }
 
     // Spawn the first tile without a time out timer
@@ -167,6 +220,22 @@ public class GridManager : MonoBehaviour
         gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
         queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
+    }
+
+    // Creation of adding a tile to the grid
+    private void setupNewTile(int row, int col, int spriteIndex)
+    {
+        changeTileSprite(gridArray[row,col], spriteIndex);
+        tileNum += 1;
+        if (tileNum >= tileNumMax){
+            tileNum = 1;
+        }
+        gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
+
+        tileTimer = tileUptimeFinished(gridArray[row,col]);
+        StartCoroutine(tileTimer);
+        queuedTileOrder.Add(gridArray[row,col]);
+        queuedTileTimer.Add(tileTimer);
     }
 
     // Timer for each tile, lose game if timer ends
@@ -204,6 +273,27 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // Out the x and y addition depending on direction
+    private void getDirectionModifiers(int dir, out int rowMod, out int colMod){
+        if (dir==0){ // right
+            rowMod=1;
+            colMod=0;
+        }else if (dir==1){ // left
+            rowMod=-1;
+            colMod=0;
+        }else if (dir==2){ // up
+            rowMod=0;
+            colMod=1;
+        }else if (dir==3){ // down
+            rowMod=0;
+            colMod=-1;
+        }else{
+            rowMod=0;
+            colMod=0;
+            Debug.Log("Error: 1");
+        }
+    }
+
     // Change a tile's sprite
     private void changeTileSprite(GameObject obj, int chosen)
     {
@@ -221,6 +311,11 @@ public class GridManager : MonoBehaviour
             {   
                 changeTileSprite(gridArray[row,col], 0);
             }
+        }
+
+        // Reset tile timers
+        foreach (IEnumerator tileTimer in queuedTileTimer){
+            StopCoroutine(tileTimer);
         }
 
         // Reset text on tiles
