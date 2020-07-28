@@ -5,39 +5,51 @@ using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField]
-    private int rows = 5;
-    [SerializeField]
-    private int cols = 5;
-    [SerializeField]
-    private float tileSize = 1;
+    // Unity editor variables
     [SerializeField]
     private Text scoreText;
     [SerializeField]
     private Sprite[] sprites = new Sprite[4];
     [SerializeField]
-    private bool gamePlaying = false;
+    private int rows = 5;
+    [SerializeField]
+    private int cols = 5;
+    [SerializeField]
+    private float tileSize = 1.05f;
+    [SerializeField]
+    private float spawnInterval = 0.8f;
+    [SerializeField]
+    private float tileUptime = 1.0f;
+    [SerializeField]
+    private float sliderTileDelay = 0.03f;
+    [SerializeField]
+    private int tileSlideSizeMin = 2;
+    [SerializeField]
+    private int tileSlideSizeMax = 3;
 
+    // Arrays and Lists
     private GameObject[,] gridArray;
     // 0 = grey tile, 1 = green tile
     private int[,] gameArray;
     private int rowCoord, colCoord;
+    private string[] coords;
     private List<GameObject> queuedTileOrder = new List<GameObject>();
     private List<IEnumerator> queuedTileTimer = new List<IEnumerator>();
-    private GameObject currentClickedTile;
+    private List<int> directionList;
 
+    // Booleans
     public bool tileClicked = false;
     private bool firstTileClicked;
-    static float spawnInterval = 2.0f;
-    private float tileUptime = 3.0f;
-    private int score = 0;
-    private int tileNum;
+    private bool gamePlaying = false;
     private int tileNumMax = 9;
     private int slideTileProbability = 3;
-    private string[] coords;
+    private int rowAdd, colAdd, tempRow, tempCol, i, ind, col, row, score, tileNum;
 
-    IEnumerator tileSpawnTimer;
-    IEnumerator tileTimer;
+    // Ienumerators
+    IEnumerator tileSpawnTimer,tileTimer;
+
+    // Game objects
+    private GameObject currentClickedTile;
 
     // Start is called before the first frame update
     void Start()
@@ -98,10 +110,10 @@ public class GridManager : MonoBehaviour
         GameObject referenceTile = (GameObject)Instantiate(Resources.Load("tile-0"));
         gridArray = new GameObject[rows, cols];
 
-        for (int row = 0; row < rows; row++)
+        for (row = 0; row < rows; row++)
         {
 
-            for (int col = 0; col < cols; col++)
+            for (col = 0; col < cols; col++)
             {
                 GameObject tile = (GameObject)Instantiate(referenceTile, transform);
                 tile.name = row + "," + col;
@@ -148,30 +160,29 @@ public class GridManager : MonoBehaviour
 
             if(Random.Range(0,10) > slideTileProbability){
                 getSpawnCoords(out rowCoord, out colCoord);
-                setupNewTile(rowCoord, colCoord, 1);
+                setupNewTile(rowCoord, colCoord);
             }else{
-                spawnTileSlider(Random.Range(2,4));
+                StartCoroutine(spawnTileSlider(Random.Range(tileSlideSizeMin,tileSlideSizeMax+1)));
             }
             
         }
     }
 
     // Spawn a tiles using the same constant interval
-    private void spawnTileSlider(int tileSlideSize){
+    IEnumerator spawnTileSlider(int tileSlideSize){
         // 2d array to hold coords that the tiles for the slider will spawn with
-        List<int> directionList = new List<int>();
-        int rowAdd, colAdd, tempRow, tempCol;
-
+        directionList = new List<int>();
+        
         while (true)
         {
             getSpawnCoords(out rowCoord, out colCoord);
             
-            for(int i = 0; i < 4; i++)
+            for(i = 0; i < 4; i++)
             {
                 getDirectionModifiers(i, out rowAdd, out colAdd);
 
                 // Check if spots avaiable in all directions
-                for (int ind = 1; ind < tileSlideSize; ind++)
+                for (ind = 1; ind < tileSlideSize; ind++)
                 {
                     tempRow = rowCoord+(rowAdd*ind);
                     tempCol = colCoord+(colAdd*ind);
@@ -203,8 +214,11 @@ public class GridManager : MonoBehaviour
         
         getDirectionModifiers(directionList[Random.Range(0,directionList.Count)], out rowAdd, out colAdd);
 
-        for (int i = 0; i < tileSlideSize; i++){
-            setupNewTile(rowCoord+(rowAdd*i), colCoord+(colAdd*i), 1);
+        // Reset tile num to make it easier to see the order
+        tileNum = 0;
+        for (i = 0; i < tileSlideSize; i++){
+            yield return new WaitForSeconds(sliderTileDelay);
+            setupNewTile(rowCoord+(rowAdd*i), colCoord+(colAdd*i));
         }
         
     }
@@ -223,9 +237,9 @@ public class GridManager : MonoBehaviour
     }
 
     // Creation of adding a tile to the grid
-    private void setupNewTile(int row, int col, int spriteIndex)
+    private void setupNewTile(int row, int col)
     {
-        changeTileSprite(gridArray[row,col], spriteIndex);
+        changeTileSprite(gridArray[row,col], 1);
         tileNum += 1;
         if (tileNum >= tileNumMax){
             tileNum = 1;
@@ -256,6 +270,11 @@ public class GridManager : MonoBehaviour
         foreach (IEnumerator tileTimer in queuedTileTimer){
             StopCoroutine(tileTimer);
         }
+    }
+
+    // Change spawn interval
+    private int newSpawnInterval(){
+        return 0;
     }
 
     // Out a random available row and column
@@ -305,9 +324,9 @@ public class GridManager : MonoBehaviour
         StopCoroutine(tileSpawnTimer);
 
         // Reset tiles
-        for (int row = 0; row < rows; row++)
+        for (row = 0; row < rows; row++)
         {
-            for (int col = 0; col < cols; col++)
+            for (col = 0; col < cols; col++)
             {   
                 changeTileSprite(gridArray[row,col], 0);
             }
