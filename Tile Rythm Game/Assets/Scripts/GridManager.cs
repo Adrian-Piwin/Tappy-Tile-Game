@@ -17,15 +17,23 @@ public class GridManager : MonoBehaviour
     [SerializeField]
     private float tileSize = 1.05f;
     [SerializeField]
-    private float spawnInterval = 0.8f;
+    private float spawnSingleInterval = 0.5f;
+    [SerializeField]
+    private float spawnMultipleInterval = 0.8f;
     [SerializeField]
     private float tileUptime = 1.0f;
     [SerializeField]
     private float sliderTileDelay = 0.03f;
     [SerializeField]
+    private int tileSingleSizeMin = 3;
+    [SerializeField]
+    private int tileSingleSizeMax = 6;
+    [SerializeField]
     private int tileSlideSizeMin = 2;
     [SerializeField]
     private int tileSlideSizeMax = 3;
+    [SerializeField]
+    private int slideTileProbability = 3;
 
     // Arrays and Lists
     private GameObject[,] gridArray;
@@ -39,13 +47,12 @@ public class GridManager : MonoBehaviour
     private List<int> dirList = new List<int>();
     private List<int[]> tempList;
 
-    // Booleans
+    // Variables
     public bool tileClicked = false;
-    private bool firstTileClicked;
+    private bool firstTileClicked, isSingleTile, isMultipleTile;
     private bool gamePlaying = false;
-    private int tileNumMax = 9;
-    private int slideTileProbability = 3;
-    private int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, ind, score, tileNum, dir;
+    private int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, ind, score, tileNum, dir, singleTileMax;
+    private float spwnInterval;
 
     // Ienumerators
     IEnumerator tileSpawnTimer,tileTimer;
@@ -157,24 +164,51 @@ public class GridManager : MonoBehaviour
         updateScoreText();
         gameArray = new int[rows, cols];
 
-        tileSpawnTimer = spawnTile(spawnInterval);
+        tileSpawnTimer = spawnTiles();
         firstTileClicked = true;
         spawnFirstTile();
     }
 
     // Spawn a tiles using the same constant interval
-    IEnumerator spawnTile(float spwnInterval){
+    IEnumerator spawnTiles(){
+        isMultipleTile = false;
+        isSingleTile = false;
+
         while (true)
         {
+            // If nothing is spawning, choose a type of tile to spawn
+            if (!isSingleTile && !isMultipleTile){   
+                if(Random.Range(0,10) > slideTileProbability){
+                    isMultipleTile = false;
+                    isSingleTile = true;
+                    spwnInterval = spawnSingleInterval;
+                    singleTileMax = Random.Range(tileSingleSizeMax, tileSingleSizeMin);
+                    if (!firstTileClicked){
+                        tileNum = 0;
+                    }
+                }else{
+                    isMultipleTile = true;
+                    isSingleTile = false;
+                    spwnInterval = spawnMultipleInterval;
+                    tileNum = 0;
+                }
+            }
+            // Change spawn interval depending on type of tile spawning
             yield return new WaitForSeconds(spwnInterval);
 
-            if(Random.Range(0,10) > slideTileProbability){
+            // Spawn single or multiple tiles depending on what is in queue
+            if (isSingleTile){
                 getSpawnCoords(out rowCoord, out colCoord);
                 setupNewTile(rowCoord, colCoord);
-            }else{
+
+                if (tileNum >= singleTileMax){
+                    isSingleTile = false;
+                }
+            }else if (isMultipleTile){
                 StartCoroutine(spawnTileSlider(Random.Range(tileSlideSizeMin,tileSlideSizeMax+1)));
+                isMultipleTile = false;
             }
-            
+
         }
     }
 
@@ -233,9 +267,6 @@ public class GridManager : MonoBehaviour
 
         }
 
-        // Reset tile num to make it easier to see the order
-        tileNum = 0;
-
         rowAdd = 0;
         colAdd = 0;
         // Create tiles in order of direction list
@@ -293,9 +324,7 @@ public class GridManager : MonoBehaviour
         getSpawnCoords(out rowCoord, out colCoord);
         changeTileSprite(gridArray[rowCoord,colCoord], 1);
         tileNum += 1;
-        if (tileNum >= tileNumMax){
-            tileNum = 1;
-        }
+
         gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
         queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
@@ -311,9 +340,7 @@ public class GridManager : MonoBehaviour
 
         // Get number for the tile and update the tile
         tileNum += 1;
-        if (tileNum >= tileNumMax){
-            tileNum = 1;
-        }
+
         gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
         // Set up timers & append to queues
