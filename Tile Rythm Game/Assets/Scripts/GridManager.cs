@@ -48,12 +48,14 @@ public class GridManager : MonoBehaviour
     // Ienumerators
     IEnumerator tileSpawnTimer,tileTimer;
 
-    // Game objects
+    // Other
     private GameObject currentClickedTile;
+    private AudioManager audioManager;
 
     // Start is called before the first frame update
     void Start()
     {
+        audioManager = GameObject.FindObjectOfType<AudioManager>();
         GenerateGrid();
         StartGame();
     }
@@ -67,14 +69,21 @@ public class GridManager : MonoBehaviour
             // Check if tile matches the current queued tile 
             if (queuedTileOrder.Count != 0){
                 if (currentClickedTile == queuedTileOrder[0]){
+
                     queuedTileOrder.RemoveAt(0);
-                    
+
+                    // Play sound effect
+                    audioManager.playTileClickedSound();
+
                     // Update game array
                     coords = (currentClickedTile.name).Split(',');
                     gameArray[int.Parse(coords[0]), int.Parse(coords[1])] = 0;
 
+                    // Update tile sprite and number
                     changeTileSprite(currentClickedTile, 0);
                     currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
+
+                    // Update score
                     score += 1;
                     updateScoreText();
                     
@@ -91,6 +100,7 @@ public class GridManager : MonoBehaviour
                     }
 
                 }else{
+                    // Lose if wrong tile is pressed
                     if(!firstTileClicked)
                     {
                         changeTileSprite(currentClickedTile, 3);
@@ -137,8 +147,6 @@ public class GridManager : MonoBehaviour
     // Start game
     private void StartGame()
     {
-        //queuedTileOrder.Add(gridArray[0,1]);
-        //changeTileSprite(gridArray[0,1], 1);
         gamePlaying = true;
         queuedTileOrder.Clear();
         queuedTileTimer.Clear();
