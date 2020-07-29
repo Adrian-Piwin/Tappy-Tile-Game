@@ -31,11 +31,13 @@ public class GridManager : MonoBehaviour
     private GameObject[,] gridArray;
     // 0 = grey tile, 1 = green tile
     private int[,] gameArray;
-    private int rowCoord, colCoord;
     private string[] coords;
+    private int[] tempArray;
     private List<GameObject> queuedTileOrder = new List<GameObject>();
     private List<IEnumerator> queuedTileTimer = new List<IEnumerator>();
-    private List<int> directionList;
+    private List<int> directionList = new List<int>();
+    private List<int> dirList = new List<int>();
+    private List<int[]> tempList;
 
     // Booleans
     public bool tileClicked = false;
@@ -43,7 +45,7 @@ public class GridManager : MonoBehaviour
     private bool gamePlaying = false;
     private int tileNumMax = 9;
     private int slideTileProbability = 3;
-    private int rowAdd, colAdd, tempRow, tempCol, i, ind, col, row, score, tileNum;
+    private int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, ind, score, tileNum, dir;
 
     // Ienumerators
     IEnumerator tileSpawnTimer,tileTimer;
@@ -120,10 +122,10 @@ public class GridManager : MonoBehaviour
         GameObject referenceTile = (GameObject)Instantiate(Resources.Load("tile-0"));
         gridArray = new GameObject[rows, cols];
 
-        for (row = 0; row < rows; row++)
+        for (int row = 0; row < rows; row++)
         {
 
-            for (col = 0; col < cols; col++)
+            for (int col = 0; col < cols; col++)
             {
                 GameObject tile = (GameObject)Instantiate(referenceTile, transform);
                 tile.name = row + "," + col;
@@ -179,52 +181,111 @@ public class GridManager : MonoBehaviour
     // Spawn a tiles using the same constant interval
     IEnumerator spawnTileSlider(int tileSlideSize){
         // 2d array to hold coords that the tiles for the slider will spawn with
-        directionList = new List<int>();
+        tempList = new List<int[]>();
+        tempArray = new int[2];
         
         while (true)
         {
+            directionList.Clear();
+            // Reset old tiles if error
+            for (int i = 0; i < tempList.Count; i++){
+                gameArray[tempList[i][0], tempList[i][1]] = 0;
+            }
+            tempList.Clear();
+            // Choose base point
             getSpawnCoords(out rowCoord, out colCoord);
+            // Temp have coords as taken up space
+            gameArray[rowCoord, colCoord] = 1;
+
+            tempRow = rowCoord;
+            tempCol = colCoord;
+
+            // Create list of random and possible directions to spawn the next tile, touching the prev tile
             
-            for(i = 0; i < 4; i++)
+            for (int i = 1; i < tileSlideSize; i++)
             {
-                getDirectionModifiers(i, out rowAdd, out colAdd);
+                dir = chooseRandomDirection(tempRow, tempCol);
 
-                // Check if spots avaiable in all directions
-                for (ind = 1; ind < tileSlideSize; ind++)
-                {
-                    tempRow = rowCoord+(rowAdd*ind);
-                    tempCol = colCoord+(colAdd*ind);
-
-                    // Check if out of range, or if spot already occupied
-                    if (tempRow < 0 || tempRow >= rows || tempCol < 0 || tempCol >= cols || gameArray[tempRow, tempCol] == 1)
-                    {
-                        break;
-                    }
-                    
-                    // If spot is available, add direction to list
-                    if (ind == tileSlideSize-1)
-                    {
-                        directionList.Add(i);
-                    }
+                if (dir == -1){
+                    break;
                 }
+
+                directionList.Add(dir);
+                getDirectionModifiers(dir, out rowAdd, out colAdd);
+
+                tempRow += rowAdd;
+                tempCol += colAdd;
+                
+                gameArray[tempRow, tempCol] = 1;
+                
+                tempArray[0] = tempRow;
+                tempArray[1] = tempCol;
+                tempList.Add(tempArray);
             }
 
-            // Continue if at least 1 direction is available
-            if (directionList.Count > 0){
+            // Continue if correct amount of tiles were created
+            if (directionList.Count == tileSlideSize-1){
                 break;
             }
 
+            // Reset coords if error
+            gameArray[rowCoord, colCoord] = 0;
+
         }
-        
-        getDirectionModifiers(directionList[Random.Range(0,directionList.Count)], out rowAdd, out colAdd);
 
         // Reset tile num to make it easier to see the order
         tileNum = 0;
-        for (i = 0; i < tileSlideSize; i++){
+
+        rowAdd = 0;
+        colAdd = 0;
+        // Create tiles in order of direction list
+        for (int i = 0; i < tileSlideSize; i++){
             yield return new WaitForSeconds(sliderTileDelay);
-            setupNewTile(rowCoord+(rowAdd*i), colCoord+(colAdd*i));
+            rowCoord += rowAdd;
+            colCoord += colAdd;
+            setupNewTile(rowCoord, colCoord);
+
+            if (i < tileSlideSize-1)
+            {
+                getDirectionModifiers(directionList[i], out rowAdd, out colAdd);
+            }
+            
         }
         
+    }
+
+    // Given a row and col, return a random possible direction the next tile could be placed
+    private int chooseRandomDirection(int rowBase, int colBase){
+        dirList.Clear();
+        int tmpRow, tmpCol;
+        
+        for (int i = 0; i < 4; i++)
+        {
+            tmpRow = rowBase;
+            tmpCol = colBase;
+            getDirectionModifiers(i, out rowAdd, out colAdd);
+            tmpRow += rowAdd;
+            tmpCol += colAdd;
+
+            // Check if out of bounds, or already taken spot
+            if (tmpRow < 0 || tmpRow >= rows || tmpCol < 0 || tmpCol >= cols)
+            {
+                continue;
+            }else if (gameArray[tmpRow, tmpCol] == 1){
+                continue;
+            }
+
+            dirList.Add(i);
+            
+        }
+
+        // If there is no direction for the next tile to go, return error
+        if (dirList.Count == 0){
+            return -1;
+        }
+
+        // Return one of the avaiable directions randomly
+        return dirList[Random.Range(0,dirList.Count)];
     }
 
     // Spawn the first tile without a time out timer
@@ -282,11 +343,6 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    // Change spawn interval
-    private int newSpawnInterval(){
-        return 0;
-    }
-
     // Out a random available row and column
     private void getSpawnCoords(out int x, out int y)
     {
@@ -303,22 +359,30 @@ public class GridManager : MonoBehaviour
 
     // Out the x and y addition depending on direction
     private void getDirectionModifiers(int dir, out int rowMod, out int colMod){
-        if (dir==0){ // right
-            rowMod=1;
-            colMod=0;
-        }else if (dir==1){ // left
-            rowMod=-1;
-            colMod=0;
-        }else if (dir==2){ // up
-            rowMod=0;
-            colMod=1;
-        }else if (dir==3){ // down
-            rowMod=0;
-            colMod=-1;
-        }else{
-            rowMod=0;
-            colMod=0;
-            Debug.Log("Error: 1");
+
+        switch (dir){
+            case 0: // down
+                rowMod=1;
+                colMod=0;
+                break;
+            case 1: // up
+                rowMod=-1;
+                colMod=0;
+                break;
+            case 2: // right
+                rowMod=0;
+                colMod=1;
+                break;
+            case 3: // left
+                rowMod=0;
+                colMod=-1;
+                break;
+            default:
+                rowMod=0;
+                colMod=0;
+                Debug.Log("Error: 1");
+                break;
+            
         }
     }
 
@@ -333,9 +397,9 @@ public class GridManager : MonoBehaviour
         StopCoroutine(tileSpawnTimer);
 
         // Reset tiles
-        for (row = 0; row < rows; row++)
+        for (int row = 0; row < rows; row++)
         {
-            for (col = 0; col < cols; col++)
+            for (int col = 0; col < cols; col++)
             {   
                 changeTileSprite(gridArray[row,col], 0);
             }
