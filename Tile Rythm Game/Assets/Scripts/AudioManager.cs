@@ -8,17 +8,32 @@ public class AudioManager : MonoBehaviour
     private float volumeLvl = 0.2f;
 
     public static AudioClip tileClickedSound;
+    public static AudioClip lostSound;
     static AudioSource audioSource;
 
     void Start()
     {
         tileClickedSound = Resources.Load<AudioClip> ("tileclick");
+        lostSound = Resources.Load<AudioClip> ("losssound");
         audioSource = GetComponent<AudioSource> ();
         audioSource.volume = volumeLvl;
     }
 
-    public void playTileClickedSound()
+    public void playSound(string sound)
     {
-        audioSource.PlayOneShot(tileClickedSound);
+        switch (sound)
+        {
+            case "click":
+                audioSource.PlayOneShot(tileClickedSound);
+                break;
+            case "loss":
+                audioSource.PlayOneShot(lostSound);
+                break;
+            default:
+                break;
+        }
+        
     }
+
+
 }

@@ -49,9 +49,12 @@ public class GridManager : MonoBehaviour
 
     // Variables
     public bool tileClicked = false;
-    private bool firstTileClicked, isSingleTile, isMultipleTile;
+    private string currentDifficulty = "normal";
+    private bool firstTileClicked, isSingleTile, isMultipleTile, isNewScore;
     private bool gamePlaying = false;
     private int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, ind, score, tileNum, dir, singleTileMax;
+    private int normalBestScore = 0;
+    private int hardBestScore = 0;
     private float spwnInterval;
 
     // Ienumerators
@@ -59,14 +62,17 @@ public class GridManager : MonoBehaviour
 
     // Other
     private GameObject currentClickedTile;
+    private MenuScript menuScript;
     private AudioManager audioManager;
 
     // Start is called before the first frame update
     void Start()
     {
         audioManager = GameObject.FindObjectOfType<AudioManager>();
+        menuScript = GameObject.FindObjectOfType<MenuScript>();
         GenerateGrid();
-        StartGame();
+
+        startGame();
     }
 
     // Update is called once per frame
@@ -82,7 +88,7 @@ public class GridManager : MonoBehaviour
                     queuedTileOrder.RemoveAt(0);
 
                     // Play sound effect
-                    audioManager.playTileClickedSound();
+                    audioManager.playSound("click");
 
                     // Update game array
                     coords = (currentClickedTile.name).Split(',');
@@ -153,10 +159,9 @@ public class GridManager : MonoBehaviour
         transform.position = new Vector2(-gridW / 2 + tileSize / 2, gridH / 2 - tileSize / 2);
     }
 
-    // Start game
-    private void StartGame()
+    // Start Game
+    public void startGame()
     {
-        gamePlaying = true;
         queuedTileOrder.Clear();
         queuedTileTimer.Clear();
         tileNum = 0;
@@ -169,6 +174,99 @@ public class GridManager : MonoBehaviour
         spawnFirstTile();
     }
 
+    // Reset game
+    public void resetGame(){
+
+        StartCoroutine(menuScript.toggleMenu(false, 0.0f));
+        menuScript.toggleNewBestTime(false);
+        gamePlaying = true;
+        StopCoroutine(tileSpawnTimer);
+
+        // Reset tiles
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {   
+                changeTileSprite(gridArray[row,col], 0);
+            }
+        }
+
+        // Reset tile timers
+        foreach (IEnumerator tileTimer in queuedTileTimer){
+            StopCoroutine(tileTimer);
+        }
+
+        // Reset text on tiles
+        foreach(GameObject tile in queuedTileOrder)
+        {
+            tile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
+        }
+
+        startGame();
+
+    }
+
+    // Loser handler
+    private void gameLost()
+    {
+        audioManager.playSound("loss");
+        gamePlaying = false;
+        StopCoroutine(tileSpawnTimer);
+
+        foreach (IEnumerator tileTimer in queuedTileTimer){
+            StopCoroutine(tileTimer);
+        }
+        
+        // Launch menu
+        StartCoroutine(menuScript.toggleMenu(true, 1.0f));
+
+        // Update score
+        isNewScore = checkNewBest();
+        menuScript.updateScore(score);
+        if (isNewScore)
+        {
+            if (currentDifficulty == "normal")
+            {
+                menuScript.updateBestTime(normalBestScore);
+            }else 
+            {
+                menuScript.updateBestTime(hardBestScore);
+            }
+            
+        }
+    }
+
+    // Change difficulty
+    public void changeDifficulty(bool normal)
+    {
+        menuScript.updateScore(score);
+
+        if (normal)
+        {
+            spawnSingleInterval = 0.6f;
+            spawnMultipleInterval = 0.9f;
+            tileUptime = 1f;
+            tileSingleSizeMin = 3;
+            tileSlideSizeMax = 6;
+            tileSlideSizeMin = 2;
+            tileSlideSizeMax = 5;
+
+            menuScript.updateBestTime(normalBestScore);
+            currentDifficulty = "normal";
+        }else{
+            spawnSingleInterval = 0.4f;
+            spawnMultipleInterval = 0.6f;
+            tileUptime = 0.8f;
+            tileSingleSizeMin = 3;
+            tileSlideSizeMax = 8;
+            tileSlideSizeMin = 2;
+            tileSlideSizeMax = 9;
+
+            menuScript.updateBestTime(hardBestScore);
+            currentDifficulty = "hard";
+        }
+    }
+
     // Spawn a tiles using the same constant interval
     IEnumerator spawnTiles(){
         isMultipleTile = false;
@@ -177,7 +275,7 @@ public class GridManager : MonoBehaviour
         while (true)
         {
             // If nothing is spawning, choose a type of tile to spawn
-            if (!isSingleTile && !isMultipleTile){   
+            if (!isSingleTile && !isMultipleTile){  
                 if(Random.Range(0,10) > slideTileProbability){
                     isMultipleTile = false;
                     isSingleTile = true;
@@ -359,17 +457,6 @@ public class GridManager : MonoBehaviour
         gameLost();
     }
 
-    // Loser handler
-    private void gameLost()
-    {
-        gamePlaying = false;
-        StopCoroutine(tileSpawnTimer);
-
-        foreach (IEnumerator tileTimer in queuedTileTimer){
-            StopCoroutine(tileTimer);
-        }
-    }
-
     // Out a random available row and column
     private void getSpawnCoords(out int x, out int y)
     {
@@ -419,36 +506,27 @@ public class GridManager : MonoBehaviour
         obj.GetComponent<SpriteRenderer>().sprite = sprites[chosen];
     }
 
-    // Reset game
-    public void resetGame(){
-        StopCoroutine(tileSpawnTimer);
-
-        // Reset tiles
-        for (int row = 0; row < rows; row++)
+    // Check if score is a new best for either normal or hard mode
+    private bool checkNewBest()
+    {
+        if (currentDifficulty == "normal" && score > normalBestScore)
         {
-            for (int col = 0; col < cols; col++)
-            {   
-                changeTileSprite(gridArray[row,col], 0);
-            }
-        }
-
-        // Reset tile timers
-        foreach (IEnumerator tileTimer in queuedTileTimer){
-            StopCoroutine(tileTimer);
-        }
-
-        // Reset text on tiles
-        foreach(GameObject tile in queuedTileOrder)
+            normalBestScore = score;
+            menuScript.toggleNewBestTime(true);
+            return true;
+        }else if (currentDifficulty == "normal" && score > hardBestScore)
         {
-            tile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
+            hardBestScore = score;
+            menuScript.toggleNewBestTime(true);
+            return true;
         }
-
-        StartGame();
+        
+        return false;
     }
 
     // Update score text on screen
     private void updateScoreText(){
-        scoreText.text = ("Score: " + score);
+        scoreText.text = ("  " + score);
     }
 
     // Get tile that was clicked
