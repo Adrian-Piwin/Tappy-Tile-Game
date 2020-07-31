@@ -9,56 +9,46 @@ public class GridManager : MonoBehaviour
     [SerializeField]
     private Text scoreText;
     [SerializeField]
-    private Sprite[] sprites = new Sprite[4];
+    private Sprite tileSprite;
     [SerializeField]
     private int rows = 5;
     [SerializeField]
     private int cols = 5;
     [SerializeField]
     private float tileSize = 1.05f;
-    [SerializeField]
+
+    // Difficulty settings
     private float spawnSingleInterval = 0.5f;
-    [SerializeField]
     private float spawnMultipleInterval = 0.8f;
-    [SerializeField]
     private float tileUptime = 1.0f;
-    [SerializeField]
     private float sliderTileDelay = 0.03f;
-    [SerializeField]
     private int tileSingleSizeMin = 3;
-    [SerializeField]
     private int tileSingleSizeMax = 6;
-    [SerializeField]
     private int tileSlideSizeMin = 2;
-    [SerializeField]
     private int tileSlideSizeMax = 3;
-    [SerializeField]
     private int slideTileProbability = 3;
 
     // Arrays and Lists
     private GameObject[,] gridArray;
     // 0 = grey tile, 1 = green tile
     private int[,] gameArray;
-    private string[] coords;
-    private int[] tempArray;
     private List<GameObject> queuedTileOrder = new List<GameObject>();
     private List<IEnumerator> queuedTileTimer = new List<IEnumerator>();
-    private List<int> directionList = new List<int>();
-    private List<int> dirList = new List<int>();
-    private List<int[]> tempList;
+    private List<string> colorSetList;
 
     // Variables
     public bool tileClicked = false;
     private string currentDifficulty = "normal";
-    private bool firstTileClicked, isSingleTile, isMultipleTile, isNewScore;
+    private bool firstTileClicked;
     private bool gamePlaying = false;
-    private int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, ind, score, tileNum, dir, singleTileMax;
+    private int score, tileNum;
     private int normalBestScore = 0;
     private int hardBestScore = 0;
     private float spwnInterval;
+    private int currentColorSet;
 
     // Ienumerators
-    IEnumerator tileSpawnTimer,tileTimer;
+    IEnumerator tileSpawnTimer;
 
     // Other
     private GameObject currentClickedTile;
@@ -70,8 +60,8 @@ public class GridManager : MonoBehaviour
     {
         audioManager = GameObject.FindObjectOfType<AudioManager>();
         menuScript = GameObject.FindObjectOfType<MenuScript>();
+        setupColorSets();
         GenerateGrid();
-
         startGame();
     }
 
@@ -91,11 +81,14 @@ public class GridManager : MonoBehaviour
                     audioManager.playSound("click");
 
                     // Update game array
-                    coords = (currentClickedTile.name).Split(',');
+                    string[] coords = (currentClickedTile.name).Split(',');
                     gameArray[int.Parse(coords[0]), int.Parse(coords[1])] = 0;
 
+                    // Stop fading to red
+                    currentClickedTile.GetComponent<FadeColorScript>().StopFade();
+
                     // Update tile sprite and number
-                    changeTileSprite(currentClickedTile, 0);
+                    changeTileColor(currentClickedTile, 0);
                     currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
 
                     // Update score
@@ -118,8 +111,7 @@ public class GridManager : MonoBehaviour
                     // Lose if wrong tile is pressed
                     if(!firstTileClicked)
                     {
-                        changeTileSprite(currentClickedTile, 3);
-                        gameLost();
+                        gameOver(currentClickedTile);
                     }
                 }
             }
@@ -168,6 +160,7 @@ public class GridManager : MonoBehaviour
         score = 0;
         updateScoreText();
         gameArray = new int[rows, cols];
+        gamePlaying = true;
 
         tileSpawnTimer = spawnTiles();
         firstTileClicked = true;
@@ -179,21 +172,14 @@ public class GridManager : MonoBehaviour
 
         StartCoroutine(menuScript.toggleMenu(false, 0.0f));
         menuScript.toggleNewBestTime(false);
-        gamePlaying = true;
-        StopCoroutine(tileSpawnTimer);
 
         // Reset tiles
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < cols; col++)
             {   
-                changeTileSprite(gridArray[row,col], 0);
+                changeTileColor(gridArray[row,col], 0);
             }
-        }
-
-        // Reset tile timers
-        foreach (IEnumerator tileTimer in queuedTileTimer){
-            StopCoroutine(tileTimer);
         }
 
         // Reset text on tiles
@@ -207,23 +193,33 @@ public class GridManager : MonoBehaviour
     }
 
     // Loser handler
-    private void gameLost()
+    private void gameOver(GameObject lostTile)
     {
-        audioManager.playSound("loss");
+        // Stop spawning tiles
         gamePlaying = false;
         StopCoroutine(tileSpawnTimer);
 
+        // Stop timers for queued tiles
         foreach (IEnumerator tileTimer in queuedTileTimer){
             StopCoroutine(tileTimer);
         }
+
+        // Stop queued tiles from changing colors
+        foreach (GameObject tile in queuedTileOrder)
+        {
+            tile.GetComponent<FadeColorScript>().StopFade();
+        }
+
+        // Loss effects
+        StartCoroutine(blinkingLossTile(lostTile));
+        audioManager.playSound("loss");
         
         // Launch menu
-        StartCoroutine(menuScript.toggleMenu(true, 1.0f));
+        StartCoroutine(menuScript.toggleMenu(true, 1.5f));
 
         // Update score
-        isNewScore = checkNewBest();
         menuScript.updateScore(score);
-        if (isNewScore)
+        if (checkNewBest())
         {
             if (currentDifficulty == "normal")
             {
@@ -245,22 +241,26 @@ public class GridManager : MonoBehaviour
         {
             spawnSingleInterval = 0.6f;
             spawnMultipleInterval = 0.9f;
-            tileUptime = 1f;
+            tileUptime = 1.2f;
             tileSingleSizeMin = 3;
             tileSlideSizeMax = 6;
             tileSlideSizeMin = 2;
             tileSlideSizeMax = 5;
+            sliderTileDelay = 0.08f;
+            slideTileProbability = 5;
 
             menuScript.updateBestTime(normalBestScore);
             currentDifficulty = "normal";
         }else{
-            spawnSingleInterval = 0.4f;
-            spawnMultipleInterval = 0.6f;
-            tileUptime = 0.8f;
-            tileSingleSizeMin = 3;
+            spawnSingleInterval = 0.3f;
+            spawnMultipleInterval = 0.7f;
+            tileUptime = 0.9f;
+            tileSingleSizeMin = 4;
             tileSlideSizeMax = 8;
-            tileSlideSizeMin = 2;
-            tileSlideSizeMax = 9;
+            tileSlideSizeMin = 3;
+            tileSlideSizeMax = 7;
+            sliderTileDelay = 0.05f;
+            slideTileProbability = 4;
 
             menuScript.updateBestTime(hardBestScore);
             currentDifficulty = "hard";
@@ -269,8 +269,9 @@ public class GridManager : MonoBehaviour
 
     // Spawn a tiles using the same constant interval
     IEnumerator spawnTiles(){
-        isMultipleTile = false;
-        isSingleTile = false;
+        bool isMultipleTile = false;
+        bool isSingleTile = false;
+        int rowCoord, colCoord, singleTileMax=0;
 
         while (true)
         {
@@ -288,7 +289,9 @@ public class GridManager : MonoBehaviour
                     isMultipleTile = true;
                     isSingleTile = false;
                     spwnInterval = spawnMultipleInterval;
-                    tileNum = 0;
+                    if (!firstTileClicked){
+                        tileNum = 0;
+                    }
                 }
             }
             // Change spawn interval depending on type of tile spawning
@@ -313,8 +316,10 @@ public class GridManager : MonoBehaviour
     // Spawn a tiles using the same constant interval
     IEnumerator spawnTileSlider(int tileSlideSize){
         // 2d array to hold coords that the tiles for the slider will spawn with
-        tempList = new List<int[]>();
-        tempArray = new int[2];
+        List<int[]> tempList = new List<int[]>();
+        List<int> directionList = new List<int>();
+        int[] tempArray = new int[2];
+        int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, dir;
         
         while (true)
         {
@@ -383,10 +388,24 @@ public class GridManager : MonoBehaviour
         
     }
 
+    private IEnumerator blinkingLossTile(GameObject tile)
+    {
+        SpriteRenderer tileSprite = tile.GetComponent<SpriteRenderer>();
+        Color currentColor = tileSprite.color;
+
+        for (int i = 0; i < 4; i++)
+        {
+            tileSprite.color = currentColor;
+            yield return new WaitForSeconds(0.2f);
+            changeTileColor(tile, 1);
+            yield return new WaitForSeconds(0.2f);
+        }
+    }
+
     // Given a row and col, return a random possible direction the next tile could be placed
     private int chooseRandomDirection(int rowBase, int colBase){
-        dirList.Clear();
-        int tmpRow, tmpCol;
+        List<int> dirList = new List<int>();
+        int tmpRow, tmpCol, rowAdd, colAdd;
         
         for (int i = 0; i < 4; i++)
         {
@@ -419,8 +438,10 @@ public class GridManager : MonoBehaviour
 
     // Spawn the first tile without a time out timer
     private void spawnFirstTile(){
+        int rowCoord, colCoord;
         getSpawnCoords(out rowCoord, out colCoord);
-        changeTileSprite(gridArray[rowCoord,colCoord], 1);
+        currentColorSet = Random.Range(2,colorSetList.Count);
+        changeTileColor(gridArray[rowCoord,colCoord], currentColorSet);
         tileNum += 1;
 
         gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
@@ -431,18 +452,23 @@ public class GridManager : MonoBehaviour
     // Creation of adding a tile to the grid
     private void setupNewTile(int row, int col)
     {
-        // Update sprite
-        changeTileSprite(gridArray[row,col], 1);
         // Update game array
         gameArray[row, col] = 1;
 
         // Get number for the tile and update the tile
         tileNum += 1;
 
+        if (tileNum == 1){
+            currentColorSet = Random.Range(2,colorSetList.Count);
+        }
+
+        // Update sprite
+        changeTileColor(gridArray[row,col], currentColorSet);
+
         gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
 
         // Set up timers & append to queues
-        tileTimer = tileUptimeFinished(gridArray[row,col]);
+        IEnumerator tileTimer = tileUptimeFinished(gridArray[row,col]);
         StartCoroutine(tileTimer);
         queuedTileTimer.Add(tileTimer);
         queuedTileOrder.Add(gridArray[row,col]);
@@ -451,10 +477,16 @@ public class GridManager : MonoBehaviour
     // Timer for each tile, lose game if timer ends
     IEnumerator tileUptimeFinished(GameObject tile)
     {
-        yield return new WaitForSeconds(tileUptime);
-        changeTileSprite(tile, 3);
+        yield return new WaitForSeconds(tileUptime/2);
 
-        gameLost();
+        tile.GetComponent<FadeColorScript>().StartFade(tileUptime/2, colorSetList[currentColorSet] ,"#FF0000");
+
+        yield return new WaitForSeconds(tileUptime/2);
+
+        if (gamePlaying)
+        {
+            gameOver(tile);
+        }
     }
 
     // Out a random available row and column
@@ -500,10 +532,32 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    // Change a tile's sprite
-    private void changeTileSprite(GameObject obj, int chosen)
+    // Set up color list
+    private void setupColorSets()
     {
-        obj.GetComponent<SpriteRenderer>().sprite = sprites[chosen];
+        colorSetList = new List<string>();
+
+        // Base color
+        colorSetList.Add("#00FFD8");
+        // Loss Color
+        colorSetList.Add("#FF0000");
+
+        // Random colors
+        colorSetList.Add("#FF9D00");
+        colorSetList.Add("#FAFF00");
+        colorSetList.Add("#76FF00");
+        colorSetList.Add("#D200FF");
+        colorSetList.Add("#0003FF");
+    }
+
+    // Change a tile's sprite
+    private void changeTileColor(GameObject obj, int chosen)
+    {
+        Color newColor;
+
+        ColorUtility.TryParseHtmlString(colorSetList[chosen], out newColor);
+
+        obj.GetComponent<SpriteRenderer>().color = newColor;
     }
 
     // Check if score is a new best for either normal or hard mode
