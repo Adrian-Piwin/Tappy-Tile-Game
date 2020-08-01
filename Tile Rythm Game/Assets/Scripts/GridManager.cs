@@ -39,7 +39,7 @@ public class GridManager : MonoBehaviour
     // Variables
     public bool tileClicked = false;
     private string currentDifficulty = "normal";
-    private bool firstTileClicked;
+    private bool firstTileClicked, isMultipleTile;
     private bool gamePlaying = false;
     private int score, tileNum;
     private int normalBestScore = 0;
@@ -62,6 +62,7 @@ public class GridManager : MonoBehaviour
         menuScript = GameObject.FindObjectOfType<MenuScript>();
         setupColorSets();
         GenerateGrid();
+        changeDifficulty(true);
         startGame();
     }
 
@@ -111,7 +112,7 @@ public class GridManager : MonoBehaviour
                     // Lose if wrong tile is pressed
                     if(!firstTileClicked)
                     {
-                        gameOver(currentClickedTile);
+                        gameOver(currentClickedTile, false);
                     }
                 }
             }
@@ -193,7 +194,7 @@ public class GridManager : MonoBehaviour
     }
 
     // Loser handler
-    private void gameOver(GameObject lostTile)
+    private void gameOver(GameObject lostTile, bool isTimedout)
     {
         // Stop spawning tiles
         gamePlaying = false;
@@ -211,7 +212,7 @@ public class GridManager : MonoBehaviour
         }
 
         // Loss effects
-        StartCoroutine(blinkingLossTile(lostTile));
+        StartCoroutine(blinkingLossTile(lostTile, isTimedout));
         audioManager.playSound("loss");
         
         // Launch menu
@@ -247,20 +248,20 @@ public class GridManager : MonoBehaviour
             tileSlideSizeMin = 2;
             tileSlideSizeMax = 5;
             sliderTileDelay = 0.08f;
-            slideTileProbability = 5;
+            slideTileProbability = 4;
 
             menuScript.updateBestTime(normalBestScore);
             currentDifficulty = "normal";
         }else{
             spawnSingleInterval = 0.3f;
-            spawnMultipleInterval = 0.7f;
+            spawnMultipleInterval = 0.9f;
             tileUptime = 0.9f;
             tileSingleSizeMin = 4;
             tileSlideSizeMax = 8;
             tileSlideSizeMin = 3;
             tileSlideSizeMax = 7;
             sliderTileDelay = 0.05f;
-            slideTileProbability = 4;
+            slideTileProbability = 5;
 
             menuScript.updateBestTime(hardBestScore);
             currentDifficulty = "hard";
@@ -269,7 +270,7 @@ public class GridManager : MonoBehaviour
 
     // Spawn a tiles using the same constant interval
     IEnumerator spawnTiles(){
-        bool isMultipleTile = false;
+        isMultipleTile = false;
         bool isSingleTile = false;
         int rowCoord, colCoord, singleTileMax=0;
 
@@ -282,21 +283,21 @@ public class GridManager : MonoBehaviour
                     isSingleTile = true;
                     spwnInterval = spawnSingleInterval;
                     singleTileMax = Random.Range(tileSingleSizeMax, tileSingleSizeMin);
-                    if (!firstTileClicked){
-                        tileNum = 0;
-                    }
+                    
                 }else{
                     isMultipleTile = true;
                     isSingleTile = false;
                     spwnInterval = spawnMultipleInterval;
-                    if (!firstTileClicked){
-                        tileNum = 0;
-                    }
                 }
+
+                Debug.Log(firstTileClicked);
+                if (!firstTileClicked){
+                        tileNum = 0;
+                        Debug.Log("new set");
+                    }
             }
             // Change spawn interval depending on type of tile spawning
             yield return new WaitForSeconds(spwnInterval);
-
             // Spawn single or multiple tiles depending on what is in queue
             if (isSingleTile){
                 getSpawnCoords(out rowCoord, out colCoord);
@@ -305,9 +306,12 @@ public class GridManager : MonoBehaviour
                 if (tileNum >= singleTileMax){
                     isSingleTile = false;
                 }
-            }else if (isMultipleTile){
+            }else{
                 StartCoroutine(spawnTileSlider(Random.Range(tileSlideSizeMin,tileSlideSizeMax+1)));
-                isMultipleTile = false;
+                // Wait for tile slide to create it's tiles
+                while (isMultipleTile){
+                    yield return new WaitForSeconds(0.01f);
+                }
             }
 
         }
@@ -385,21 +389,36 @@ public class GridManager : MonoBehaviour
             }
             
         }
+
+        isMultipleTile = false;
         
     }
 
-    private IEnumerator blinkingLossTile(GameObject tile)
+    private IEnumerator blinkingLossTile(GameObject tile, bool isTimedout)
     {
         SpriteRenderer tileSprite = tile.GetComponent<SpriteRenderer>();
         Color currentColor = tileSprite.color;
 
-        for (int i = 0; i < 4; i++)
+        if (!isTimedout)
         {
-            tileSprite.color = currentColor;
-            yield return new WaitForSeconds(0.2f);
-            changeTileColor(tile, 1);
-            yield return new WaitForSeconds(0.2f);
+            for (int i = 0; i < 4; i++)
+            {
+                tileSprite.color = currentColor;
+                yield return new WaitForSeconds(0.2f);
+                changeTileColor(tile, 1);
+                yield return new WaitForSeconds(0.2f);
+            }
+        }else
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                changeTileColor(tile, 0);
+                yield return new WaitForSeconds(0.2f);
+                tileSprite.color = currentColor;
+                yield return new WaitForSeconds(0.2f);
+            }
         }
+
     }
 
     // Given a row and col, return a random possible direction the next tile could be placed
@@ -452,14 +471,21 @@ public class GridManager : MonoBehaviour
     // Creation of adding a tile to the grid
     private void setupNewTile(int row, int col)
     {
+
+        // Play sound
+        audioManager.playSound("creation");
+
         // Update game array
         gameArray[row, col] = 1;
 
         // Get number for the tile and update the tile
         tileNum += 1;
 
+        int oldColorSet = currentColorSet;
         if (tileNum == 1){
-            currentColorSet = Random.Range(2,colorSetList.Count);
+            while (currentColorSet == oldColorSet){
+                currentColorSet = Random.Range(2,colorSetList.Count);
+            }
         }
 
         // Update sprite
@@ -485,7 +511,7 @@ public class GridManager : MonoBehaviour
 
         if (gamePlaying)
         {
-            gameOver(tile);
+            gameOver(tile, true);
         }
     }
 
