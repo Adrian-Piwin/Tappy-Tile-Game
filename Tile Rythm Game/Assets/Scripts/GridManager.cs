@@ -219,10 +219,10 @@ public class GridManager : MonoBehaviour
         {
             if (currentDifficulty == "normal")
             {
-                menuScript.updateBestTime(normalBestScore);
+                menuScript.updateBestTime(PlayerPrefs.GetInt("normalBestScore", 0));
             }else 
             {
-                menuScript.updateBestTime(hardBestScore);
+                menuScript.updateBestTime(PlayerPrefs.GetInt("hardBestScore", 0));
             }
             
         }
@@ -245,7 +245,7 @@ public class GridManager : MonoBehaviour
             sliderTileDelay = 0.08f;
             slideTileProbability = 7;
 
-            menuScript.updateBestTime(normalBestScore);
+            menuScript.updateBestTime(PlayerPrefs.GetInt("normalBestScore", 0));
             currentDifficulty = "normal";
         }else{
             spawnSingleInterval = 0.3f;
@@ -258,7 +258,7 @@ public class GridManager : MonoBehaviour
             sliderTileDelay = 0.05f;
             slideTileProbability = 5;
 
-            menuScript.updateBestTime(hardBestScore);
+            menuScript.updateBestTime(PlayerPrefs.GetInt("hardBestScore", 0));
             currentDifficulty = "hard";
         }
     }
@@ -302,7 +302,6 @@ public class GridManager : MonoBehaviour
             }else{
                 StartCoroutine(spawnTileSlider(Random.Range(tileSlideSizeMin,tileSlideSizeMax+1)));
                 // Wait for tile slide to create it's tiles
-                Debug.Log("loop 2");
                 while (isMultipleTile){
                     yield return new WaitForSeconds(0.01f);
                 }
@@ -319,7 +318,6 @@ public class GridManager : MonoBehaviour
         int[] tempArray = new int[2];
         int rowCoord, colCoord, rowAdd, colAdd, tempRow, tempCol, dir;
 
-        Debug.Log("loop 3");
         while (true)
         {
             directionList.Clear();
@@ -479,7 +477,6 @@ public class GridManager : MonoBehaviour
 
         int oldColorSet = currentColorSet;
         if (tileNum == 1){
-            Debug.Log("loop 4");
             while (currentColorSet == oldColorSet){
                 currentColorSet = Random.Range(2,colorSetList.Count);
             }
@@ -515,7 +512,6 @@ public class GridManager : MonoBehaviour
     // Out a random available row and column
     private void getSpawnCoords(out int x, out int y)
     {
-        Debug.Log("loop 1");
         while (true)
         {
             x = Random.Range(0,rows);
@@ -550,7 +546,6 @@ public class GridManager : MonoBehaviour
             default:
                 rowMod=0;
                 colMod=0;
-                Debug.Log("Error: 1");
                 break;
             
         }
@@ -587,14 +582,14 @@ public class GridManager : MonoBehaviour
     // Check if score is a new best for either normal or hard mode
     private bool checkNewBest()
     {
-        if (currentDifficulty == "normal" && score > normalBestScore)
+        if (currentDifficulty == "normal" && score > PlayerPrefs.GetInt("normalBestScore", 0))
         {
-            normalBestScore = score;
+            PlayerPrefs.SetInt("normalBestScore", score);
             menuScript.toggleNewBestTime(true);
             return true;
-        }else if (currentDifficulty == "normal" && score > hardBestScore)
+        }else if (currentDifficulty == "hard" && score > PlayerPrefs.GetInt("hardBestScore", 0))
         {
-            hardBestScore = score;
+            PlayerPrefs.SetInt("hardBestScore", score);
             menuScript.toggleNewBestTime(true);
             return true;
         }
@@ -604,7 +599,7 @@ public class GridManager : MonoBehaviour
 
     // Update score text on screen
     private void updateScoreText(){
-        scoreText.text = ("  " + score);
+        scoreText.text = ("" + score);
     }
 
     // Get tile that was clicked
