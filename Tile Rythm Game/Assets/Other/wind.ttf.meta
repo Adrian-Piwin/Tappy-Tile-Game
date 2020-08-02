@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 5da23b5f55fe8fe45a1b172b31f4fe4d
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Wind Sans Serif
+  fontNames:
+  - Wind Sans Serif
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 0cc808f7f7cecee4781b8af73403037c, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

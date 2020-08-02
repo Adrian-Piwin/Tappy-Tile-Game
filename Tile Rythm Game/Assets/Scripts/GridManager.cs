@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class GridManager : MonoBehaviour
 {
     // Unity editor variables
     [SerializeField]
-    private Text scoreText;
+    private TextMeshProUGUI scoreText;
     [SerializeField]
     private Sprite tileSprite;
     [SerializeField]
@@ -87,7 +88,7 @@ public class GridManager : MonoBehaviour
 
                     // Update tile sprite and number
                     changeTileColor(currentClickedTile, 0);
-                    currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
+                    currentClickedTile.transform.GetChild (0).gameObject.GetComponent<TextMeshPro>().SetText("");
 
                     // Update score
                     score += 1;
@@ -174,7 +175,7 @@ public class GridManager : MonoBehaviour
         // Reset text on tiles
         foreach(GameObject tile in queuedTileOrder)
         {
-            tile.transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = "";
+            tile.transform.GetChild (0).gameObject.GetComponent<TextMeshPro>().SetText("");
         }
 
         queuedTileOrder.Clear();
@@ -459,7 +460,7 @@ public class GridManager : MonoBehaviour
         changeTileColor(gridArray[rowCoord,colCoord], currentColorSet);
         tileNum += 1;
 
-        gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
+        gridArray[rowCoord,colCoord].transform.GetChild (0).gameObject.GetComponent<TextMeshPro>().SetText("" + tileNum);
 
         queuedTileOrder.Add(gridArray[rowCoord,colCoord]);
     }
@@ -487,7 +488,7 @@ public class GridManager : MonoBehaviour
         // Update sprite
         changeTileColor(gridArray[row,col], currentColorSet);
 
-        gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMesh>().text = ("" + tileNum);
+        gridArray[row,col].transform.GetChild (0).gameObject.GetComponent<TextMeshPro>().SetText("" + tileNum);
 
         // Set up timers & append to queues
         IEnumerator tileTimer = tileUptimeFinished(gridArray[row,col]);
@@ -559,16 +560,18 @@ public class GridManager : MonoBehaviour
         colorSetList = new List<string>();
 
         // Base color
-        colorSetList.Add("#00FFD8");
+        colorSetList.Add("#45FFE3");
         // Loss Color
-        colorSetList.Add("#FF0000");
+        colorSetList.Add("#202020");
 
         // Random colors
-        colorSetList.Add("#FF9D00");
-        colorSetList.Add("#FAFF00");
-        colorSetList.Add("#76FF00");
-        colorSetList.Add("#D200FF");
-        colorSetList.Add("#0003FF");
+        colorSetList.Add("#FFB100");
+        colorSetList.Add("#FF4C93");
+        colorSetList.Add("#F134FF");
+        colorSetList.Add("#7467FF");
+        colorSetList.Add("#7CFF85");
+        colorSetList.Add("#F2FF6C");
+        colorSetList.Add("#FF2D3D");
     }
 
     // Change a tile's sprite
@@ -601,7 +604,7 @@ public class GridManager : MonoBehaviour
 
     // Update score text on screen
     private void updateScoreText(){
-        scoreText.text = ("" + score);
+        scoreText.SetText("" + score);
     }
 
     // Get tile that was clicked

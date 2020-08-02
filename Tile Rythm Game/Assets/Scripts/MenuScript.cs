@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class MenuScript : MonoBehaviour
 {
@@ -12,9 +13,9 @@ public class MenuScript : MonoBehaviour
     [SerializeField]
     private GameObject newBestTitle;
     [SerializeField]
-    private Text scoreTxt;
+    private TextMeshProUGUI scoreTxt;
     [SerializeField]
-    private Text highscoreTxt;
+    private TextMeshProUGUI highscoreTxt;
     [SerializeField]
     private Button normalBtn;
     [SerializeField]
@@ -34,12 +35,12 @@ public class MenuScript : MonoBehaviour
 
     public void updateScore(int newScore)
     {
-        scoreTxt.text = "" + newScore;
+        scoreTxt.SetText("" + newScore);
     }
 
     public void updateBestTime(int newScore)
     {
-        highscoreTxt.text = "" + newScore;
+        highscoreTxt.SetText("" + newScore);
     }
 
     public void toggleNewBestTime(bool isNewBest)
