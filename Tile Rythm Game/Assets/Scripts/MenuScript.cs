@@ -47,13 +47,6 @@ public class MenuScript : MonoBehaviour
         newBestTitle.SetActive(isNewBest);
     }
 
-    public IEnumerator toggleMenu(bool isMenu, float timer)
-    {
-        yield return new WaitForSeconds(timer);
-        //gameObject.SetActive(isMenu);
-        StartCoroutine(animateMenu(!isMenu, 0.3f));
-    }
-
     public void swapBtns(string btn)
     {
         if (btn == "normal"){
@@ -75,11 +68,19 @@ public class MenuScript : MonoBehaviour
         }
     }
 
+    public IEnumerator toggleMenu(bool isMenu, float timer)
+    {
+        yield return new WaitForSeconds(timer);
+        gameObject.SetActive(true);
+        StartCoroutine(animateMenu(!isMenu, 0.3f));
+    }
+
     IEnumerator animateMenu(bool isMenu, float duration)
     {
         Vector3 currentPosition = transform.position;
         float offset = 2f;
         float offsetMultiply;
+        
 
         // fade from opaque to transparent
         if (isMenu)
@@ -97,11 +98,14 @@ public class MenuScript : MonoBehaviour
 
                 yield return null;
             }
+
+            canvasGroup.alpha = 0;
+
+            gameObject.SetActive(false);
         }
         // fade from transparent to opaque
         else
         {
-
             transform.position = transform.position + new Vector3(0, -1 * offset, 0);
 
             // loop over 1 second
@@ -115,6 +119,8 @@ public class MenuScript : MonoBehaviour
 
                 yield return null;
             }
+
+            canvasGroup.alpha = 1;
         }
     }
 

@@ -42,8 +42,6 @@ public class GridManager : MonoBehaviour
     private bool firstTileClicked, isMultipleTile;
     private bool gamePlaying = false;
     private int score, tileNum;
-    private int normalBestScore = 0;
-    private int hardBestScore = 0;
     private float spwnInterval;
     private int currentColorSet;
 
@@ -116,6 +114,10 @@ public class GridManager : MonoBehaviour
                 }
             }
             
+            tileClicked = false;
+        }else if (tileClicked && !gamePlaying)
+        {
+            currentClickedTile = null;
             tileClicked = false;
         }
         
