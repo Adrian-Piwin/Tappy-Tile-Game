@@ -214,7 +214,7 @@ public class GridManager : MonoBehaviour
         audioManager.playSound("loss");
         
         // Launch menu
-        StartCoroutine(menuScript.toggleMenu(true, 1f));
+        StartCoroutine(menuScript.toggleMenu(true, 1.5f));
 
         // Update score
         menuScript.updateScore(score);
@@ -398,7 +398,7 @@ public class GridManager : MonoBehaviour
 
         if (!isTimedout)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 tileSprite.color = currentColor;
                 yield return new WaitForSeconds(0.2f);
@@ -407,7 +407,7 @@ public class GridManager : MonoBehaviour
             }
         }else
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 changeTileColor(tile, 0);
                 yield return new WaitForSeconds(0.2f);
