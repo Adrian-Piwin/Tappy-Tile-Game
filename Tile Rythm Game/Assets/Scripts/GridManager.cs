@@ -214,7 +214,7 @@ public class GridManager : MonoBehaviour
         audioManager.playSound("loss");
         
         // Launch menu
-        StartCoroutine(menuScript.toggleMenu(true, 1.5f));
+        StartCoroutine(menuScript.toggleMenu(true, 1f));
 
         // Update score
         menuScript.updateScore(score);
@@ -238,28 +238,28 @@ public class GridManager : MonoBehaviour
 
         if (normal)
         {
-            spawnSingleInterval = 0.3f;
-            spawnMultipleInterval = 0.9f;
-            tileUptime = 1.2f;
+            spawnSingleInterval = 0.25f;
+            spawnMultipleInterval = 0.5f;
+            tileUptime = 1.3f;
             tileSingleSizeMin = 3;
             tileSingleSizeMax = 6;
-            tileSlideSizeMin = 2;
-            tileSlideSizeMax = 5;
+            tileSlideSizeMin = 3;
+            tileSlideSizeMax = 6;
             sliderTileDelay = 0.08f;
-            slideTileProbability = 7;
+            slideTileProbability = 6;
 
             menuScript.updateBestTime(PlayerPrefs.GetInt("normalBestScore", 0));
             currentDifficulty = "normal";
         }else{
-            spawnSingleInterval = 0.3f;
-            spawnMultipleInterval = 0.9f;
+            spawnSingleInterval = 0.15f;
+            spawnMultipleInterval = 0.6f;
             tileUptime = 1f;
             tileSingleSizeMin = 4;
             tileSingleSizeMax = 8;
             tileSlideSizeMin = 6;
             tileSlideSizeMax = 10;
-            sliderTileDelay = 0.05f;
-            slideTileProbability = 5;
+            sliderTileDelay = 0.08f;
+            slideTileProbability = 6;
 
             menuScript.updateBestTime(PlayerPrefs.GetInt("hardBestScore", 0));
             currentDifficulty = "hard";
@@ -398,7 +398,7 @@ public class GridManager : MonoBehaviour
 
         if (!isTimedout)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 tileSprite.color = currentColor;
                 yield return new WaitForSeconds(0.2f);
@@ -407,7 +407,7 @@ public class GridManager : MonoBehaviour
             }
         }else
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 changeTileColor(tile, 0);
                 yield return new WaitForSeconds(0.2f);
