@@ -17,18 +17,14 @@ public class MenuScript : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI highscoreTxt;
     [SerializeField]
-    private Button normalBtn;
+    private Image normalBtn;
     [SerializeField]
-    private Button hardBtn;
+    private Image hardBtn;
 
-    private ColorBlock colorsSelected, colorsUnselected;
     private CanvasGroup canvasGroup;
 
     void Start()
     {
-        colorsSelected = normalBtn.colors;
-        colorsUnselected = normalBtn.colors;
-        colorsSelected.normalColor = new Color32(255, 255, 255, 100);
         canvasGroup = gameObject.GetComponent<CanvasGroup>();
         swapBtns("normal");
     }
@@ -53,16 +49,16 @@ public class MenuScript : MonoBehaviour
         if (btn == "normal"){
             if (!normalSelected)
             {
-                normalBtn.colors = colorsSelected;
-                hardBtn.colors = colorsUnselected;
+                normalBtn.sprite = Resources.Load<Sprite>("tappytilenormalselect");
+                hardBtn.sprite = Resources.Load<Sprite>("tappytilehard");
                 normalSelected = !normalSelected;
                 toggleNewBestTime(false);
             }
-        }else if (btn == "hard"){
+        }else{
             if (normalSelected)
             {
-                hardBtn.colors = colorsSelected;
-                normalBtn.colors = colorsUnselected;
+                normalBtn.sprite = Resources.Load<Sprite>("tappytilenormal");
+                hardBtn.sprite = Resources.Load<Sprite>("tappytilehardselect");
                 normalSelected = !normalSelected;
                 toggleNewBestTime(false);
             }

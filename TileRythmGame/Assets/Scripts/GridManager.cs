@@ -182,7 +182,7 @@ public class GridManager : MonoBehaviour
         queuedTileTimer.Clear();
 
         // Close Menu
-        StartCoroutine(menuScript.toggleMenu(false, 0.0f));
+        StartCoroutine(menuScript.toggleMenu(false, 0.1f));
         menuScript.toggleNewBestTime(false);
 
         // Spawn first tile
