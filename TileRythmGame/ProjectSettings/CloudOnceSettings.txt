@@ -1,0 +1,23 @@
+{
+	"AchievementIDs":[],
+	"LeaderboardIDs":[
+		{
+			"InternalID":"NormalModeHighscore",
+			"AppleID":"com.tappytilenormalhighscore",
+			"GoogleID":"CgkI1I2DnbcGEAIQAA"
+		},
+		{
+			"InternalID":"HardModeHighscore",
+			"AppleID":"com.tappytilehardhighscore",
+			"GoogleID":"CgkI1I2DnbcGEAIQAQ"
+		}
+	],
+	"CloudVariables":[],
+	"AppleSupported":true,
+	"GoogleSupported":true,
+	"GoogleAppID":"220983248596",
+	"GoogleSetupRun":true,
+	"DebugModeEnabled":false,
+	"Version":"2.6.8",
+	"SettingsLocation":"0"
+}
