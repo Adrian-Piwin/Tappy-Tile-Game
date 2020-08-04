@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1af4e637a975ec141b0968ba9c7d97e6
+guid: bf7777c0912fa434093315c42695cb88
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4473952228770328258
-    second: tappytilenormalselect 1_0
+      213: -2333619610635108091
+    second: tappytilenormalselect_0
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -116,22 +116,22 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tappytilenormalselect 1_0
+      name: tappytilenormalselect_0
       rect:
         serializedVersion: 2
-        x: 138
-        y: 79
-        width: 748
-        height: 247
+        x: 11
+        y: 111
+        width: 1003
+        height: 178
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e31d316e62459e1c0800000000000000
-      internalID: -4473952228770328258
+      spriteID: 501853304515d9fd0800000000000000
+      internalID: -2333619610635108091
       vertices: []
       indices: 
       edges: []

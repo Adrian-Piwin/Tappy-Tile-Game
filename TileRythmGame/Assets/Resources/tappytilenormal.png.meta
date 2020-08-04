@@ -1,10 +1,7 @@
 fileFormatVersion: 2
-guid: 75785de6a08322a43aab6aa7c3504a68
+guid: ef24549893f741344b41fc5191fd53cd
 TextureImporter:
   internalIDToNameTable:
-  - first:
-      213: -2333619610635108091
-    second: tappytilenormalselect_0
   - first:
       213: 4777347165452697008
     second: tappytilenormal_0
@@ -122,13 +119,13 @@ TextureImporter:
       name: tappytilenormal_0
       rect:
         serializedVersion: 2
-        x: 139
-        y: 79
-        width: 746
-        height: 247
+        x: 11
+        y: 111
+        width: 1003
+        height: 178
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 1, y: 0, z: 0, w: 0}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0

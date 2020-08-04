@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: fbafb917489b50e4a8f10fb21fb753b2
+guid: b4880a6fd69ca2c40a0f4cf01c0ac047
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4594673672444671753
-    second: tappytilehardselec_0
+      213: -1120268995242544018
+    second: tappytilehardselect_0
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -116,13 +116,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tappytilehardselec_0
+      name: tappytilehardselect_0
       rect:
         serializedVersion: 2
-        x: 138
-        y: 79
-        width: 748
-        height: 247
+        x: 11
+        y: 111
+        width: 1003
+        height: 178
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -130,8 +130,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7f8881773a07c30c0800000000000000
-      internalID: -4594673672444671753
+      spriteID: e643fa5c8410470f0800000000000000
+      internalID: -1120268995242544018
       vertices: []
       indices: 
       edges: []
