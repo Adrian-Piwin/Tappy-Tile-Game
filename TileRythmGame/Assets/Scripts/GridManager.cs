@@ -251,7 +251,7 @@ public class GridManager : MonoBehaviour
             menuScript.updateBestTime(PlayerPrefs.GetInt("normalBestScore", 0));
             currentDifficulty = "normal";
         }else{
-            spawnSingleInterval = 0.15f;
+            spawnSingleInterval = 0.20f;
             spawnMultipleInterval = 0.7f;
             tileUptime = 1f;
             tileSingleSizeMin = 4;
